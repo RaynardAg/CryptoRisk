@@ -66,7 +66,7 @@ class CryptoDataFetcher:
                 df[f'{symbol}'] = symbol_klines[:, 4]
                 df[f'{symbol}'] = df[f'{symbol}'].apply(pd.to_numeric).pct_change()
 
-        df['Timestamp'] = pd.to_datetime(df['Timestamp'], unit='ms')
+        df['Timestamp'] = pd.to_datetime(df['Timestamp'])
         df.set_index('Timestamp', inplace=True)
         df = df.dropna()
         return df
