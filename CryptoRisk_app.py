@@ -12,17 +12,28 @@ class CryptoDataFetcher:
         self.start_time = start_time
         self.end_time = end_time
         self.base_url = "https://api.binance.com"
+        self.headers = {'User-Agent': 'MyStreamlitApp/1.0'}  # Add User-Agent header
 
     def fetch_klines(self, symbol, start_time):
         endpoint = f"/api/v3/klines?symbol={symbol}&interval=1d&limit=1000&startTime={start_time}"
         url = self.base_url + endpoint
-        try:
-            response = requests.get(url)
-            response.raise_for_status()
-            return response.json()
-        except requests.exceptions.RequestException as e:
-            st.error(f"Error fetching data for {symbol}: {e}")
-            return None
+        retries = 3
+        delay = 1  # Initial delay in seconds
+
+        for attempt in range(retries):
+            try:
+                response = requests.get(url, headers=self.headers)  # Include headers
+                response.raise_for_status()  # Raise HTTPError for bad responses (4xx or 5xx)
+                return response.json()
+            except requests.exceptions.RequestException as e:
+                st.error(f"Attempt {attempt + 1}: Error fetching data for {symbol}: {e}")
+                if attempt < retries - 1:
+                    time.sleep(delay)
+                    delay *= 2  # Exponential backoff
+                else:
+                    st.error(f"Max retries reached for {symbol}. Unable to fetch data.")
+                    return None
+        return None  # Return None if all retries fail
 
     def make_request(self):
         df = pd.DataFrame()
