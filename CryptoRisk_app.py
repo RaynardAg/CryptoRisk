@@ -11,7 +11,7 @@ class CryptoDataFetcher:
         self.symbols = symbols
         self.start_time = start_time
         self.end_time = end_time
-        self.base_url = "https://api.binance.com"
+        self.base_url = "https://api.binance.us"
         self.headers = {'User-Agent': 'MyStreamlitApp/1.0'}  # Add User-Agent header
 
     def fetch_klines(self, symbol, start_time):
