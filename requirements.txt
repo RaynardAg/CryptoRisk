@@ -1,7 +1,5 @@
 streamlit
 requests
 pandas
-datetime
-time
 numpy
 matplotlib.pyplot
