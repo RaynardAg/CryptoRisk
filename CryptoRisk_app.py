@@ -4,6 +4,7 @@ import pandas as pd
 from datetime import datetime
 import time
 import numpy as np
+import matplotlib.pyplot as plt
 
 # --- Crypto Data Fetcher Classes ---
 class CryptoDataFetcher:
