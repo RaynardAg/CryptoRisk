@@ -128,7 +128,7 @@ class CryptoVaRCalculator:
             port_ret = expected_returns @ w.T
             port_std = np.sqrt(w.T @ cov_matrix_ret @ w)
             sharpe_ratio = (port_ret - risk_free_rate) / port_std if port_std != 0 else 0
-            eff_front_dict[str(list(w))] = [port_ret, port_std, sharpe_ratio]
+            eff_front_dict[str(list(map(float, w)))] = [port_ret, port_std, sharpe_ratio]
 
         eff_frontier_dataframe = pd.DataFrame(eff_front_dict, index=['Returns', 'Standard Deviation', 'Sharpe Ratio']).T
         highest_sharpe_ratio = eff_frontier_dataframe.sort_values(by='Sharpe Ratio', ascending=False)
