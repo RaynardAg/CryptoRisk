@@ -145,7 +145,7 @@ if 'calculated' not in st.session_state:
     st.session_state.calculated = False
 
 # Streamlit app
-st.title("Crypto Portfolio Efficient Frontier and VaR Dashboard TEST")
+st.title("Crypto Portfolio Efficient Frontier and VaR Dashboard")
 
 # Input widgets
 symbols_input = st.text_input("Enter symbols separated by commas (e.g. BTCUSDT,ETHUSDT,SOLUSDT):", "BTCUSDT,ETHUSDT,SOLUSDT")
