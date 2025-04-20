@@ -93,7 +93,6 @@ class PortfolioAllocator:
     def calculate_individual_returns(self):
         return self.returns
 
-
 class CryptoVaRCalculator:
     def __init__(self, portfolio_returns, individual_returns):
         self.returns = portfolio_returns
@@ -164,6 +163,7 @@ start_date_str = st.text_input("Enter start date (YYYY-MM-DD):", "2024-01-01")
 end_date_str = st.text_input("Enter end date (YYYY-MM-DD):", "2024-12-31")
 risk_free_rate = st.number_input("Enter risk-free rate (e.g. 0.04 for 4%):", min_value=0.0, max_value=1.0, value=0.04, step=0.001, key='risk_free_rate')
 alpha = st.number_input("Enter VaR confidence level in percent (e.g. 5 for 5%):", min_value=0.1, max_value=100.0, value=5.0, step=0.1, key='alpha')
+num_bins = st.number_input("Enter the number of bins for the histograms:", min_value=10, max_value=100, value=50, step=5, key='num_bins')
 
 # Centered button layout
 col1, col2, _ = st.columns([1.5, 1, 1])  # Adjust column widths as needed
@@ -225,15 +225,21 @@ if calculate_button:
         st.subheader(f"Historical VaR ({alpha}%)")
         st.write(f"{hVaR:.4f}")
 
-        # VaR Histogram using Plotly
-        fig_var = px.histogram(
-            portfolio_returns,
-            x=0,
-            nbins=50,
-            title='Portfolio Returns Histogram with VaR',
-            labels={'0': 'Returns'}
-        )
+        # Compute histogram data for VaR and CVaR
+        counts, bin_edges = np.histogram(portfolio_returns, bins=num_bins)
+        bin_centers = 0.5 * (bin_edges[:-1] + bin_edges[1:])
         var_threshold = np.percentile(portfolio_returns, alpha)
+
+        # Determine colors based on VaR threshold
+        colors = ['red' if center <= var_threshold else 'blue' for center in bin_centers]
+
+        # Create VaR Histogram
+        fig_var = go.Figure(data=[go.Bar(
+            x=bin_centers,
+            y=counts,
+            marker_color=colors,
+            opacity=0.7
+        )])
         fig_var.add_vline(
             x=var_threshold,
             line_color='red',
@@ -241,25 +247,26 @@ if calculate_button:
             annotation_text=f'VaR ({alpha}%) = {var_threshold:.4f}',
             annotation_position="top right"
         )
+        fig_var.update_layout(
+            title='Portfolio Returns Histogram with VaR',
+            xaxis_title='Returns',
+            yaxis_title='Frequency'
+        )
         st.plotly_chart(fig_var)
 
         # Display CVaR value
         st.subheader(f"Historical CVaR ({alpha}%)")
         st.write(f"{historical_cvar:.4f}")
 
-        # CVaR Histogram using Plotly
-        fig_cvar = px.histogram(
-            portfolio_returns,
-            x=0,
-            nbins=50,
-            title='Portfolio Returns Histogram with CVaR',
-            labels={'0': 'Returns'}
-        )
-        var_threshold = np.percentile(portfolio_returns, alpha)
-        cvar_value = var_calculator.historical_cvar(alpha)
+        # Create CVaR Histogram
+        fig_cvar = go.Figure(data=[go.Bar(
+            x=bin_centers,
+            y=counts,
+            marker_color=colors,
+            opacity=0.7
+        )])
 
-        # Color bars below VaR threshold in red
-        fig_cvar.update_traces(marker_color=['red' if x <= var_threshold else 'blue' for x in portfolio_returns.iloc[:, 0]], marker_opacity=0.7)
+        cvar_value = var_calculator.historical_cvar(alpha)
 
         fig_cvar.add_vline(
             x=cvar_value,
@@ -268,6 +275,13 @@ if calculate_button:
             annotation_text=f'CVaR ({alpha}%) = {cvar_value:.4f}',
             annotation_position="top right"
         )
+
+        fig_cvar.update_layout(
+            title='Portfolio Returns Histogram with CVaR',
+            xaxis_title='Returns',
+            yaxis_title='Frequency'
+        )
+
         st.plotly_chart(fig_cvar)
 
         st.session_state.calculated = True
@@ -275,8 +289,6 @@ if calculate_button:
     except Exception as e:
         st.error(f"Error during calculation: {e}")
 
-# Show reset button only after calculation is done
-# Show reset button only after calculation is done at the bottom of the page
 if st.session_state.calculated:
     # Create a new set of columns at the end of the page
     st.write("")  # Add some space
@@ -287,7 +299,3 @@ if st.session_state.calculated:
         if st.button("Reset"):
             st.session_state.calculated = False
             st.rerun()
-
-
-
-
