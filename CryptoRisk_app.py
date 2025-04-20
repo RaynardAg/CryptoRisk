@@ -222,8 +222,7 @@ if calculate_button:
         historical_cvar = -var_calculator.historical_cvar(alpha) * np.sqrt(time_horizon)
 
         # Display VaR value
-        st.subheader(f"Historical VaR ({alpha}%)")
-        st.write(f"{hVaR:.4f}")
+        st.subheader(f"Historical VaR ({alpha}%) - {hVaR:.4f}")
 
         # Compute histogram data for VaR and CVaR
         counts, bin_edges = np.histogram(portfolio_returns, bins=num_bins)
@@ -255,8 +254,7 @@ if calculate_button:
         st.plotly_chart(fig_var)
 
         # Display CVaR value
-        st.subheader(f"Historical CVaR ({alpha}%)")
-        st.write(f"{historical_cvar:.4f}")
+        st.subheader(f"Historical CVaR ({alpha}%) - {historical_cvar:.4f}")
 
         # Create CVaR Histogram
         fig_cvar = go.Figure(data=[go.Bar(
