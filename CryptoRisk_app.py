@@ -284,6 +284,20 @@ if calculate_button:
 
         st.session_state.calculated = True
 
+        # Time Series Graph
+        # Calculate cumulative returns
+        cumulative_returns = (1 + portfolio_returns).cumprod()
+
+        # Create DataFrame for the cumulative returns
+        cumulative_returns_df = pd.DataFrame(cumulative_returns, index=individual_returns.index, columns=['Cumulative Portfolio Value'])
+
+        # Plot the cumulative returns
+        fig_cumulative_returns = px.line(cumulative_returns_df, x=cumulative_returns_df.index, y='Cumulative Portfolio Value', title='Portfolio Value Over Time')
+        fig_cumulative_returns.update_layout(xaxis_title='Date', yaxis_title='Cumulative Portfolio Value')
+        st.plotly_chart(fig_cumulative_returns)
+
+        st.session_state.calculated = True
+
     except Exception as e:
         st.error(f"Error during calculation: {e}")
 
