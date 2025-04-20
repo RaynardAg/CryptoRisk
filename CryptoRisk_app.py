@@ -148,7 +148,17 @@ if 'calculated' not in st.session_state:
 st.title("Crypto Portfolio Efficient Frontier and VaR Dashboard")
 
 # Input widgets
-symbols_input = st.text_input("Enter symbols separated by commas (e.g. BTCUSDT,ETHUSDT,SOLUSDT):", "BTCUSDT,ETHUSDT,SOLUSDT")
+available_tickers = ["BTCUSDT", "ETHUSDT", "SOLUSDT", "XRPUSDT", "BNBUSDT", "DOGEUSDT", "ADAUSDT", "XLMUSDT", "AVAXUSDT"]
+symbols_input = st.multiselect(
+    "Select tickers to include in the portfolio:",
+    options=available_tickers,
+    default=["BTCUSDT", "ETHUSDT", "SOLUSDT"]
+)
+if not symbols_input:
+    st.warning("Please select at least one ticker.")
+else:
+    SYMBOLS = [sym.upper() for sym in symbols_input]
+
 start_date_str = st.text_input("Enter start date (YYYY-MM-DD):", "2024-01-01")
 end_date_str = st.text_input("Enter end date (YYYY-MM-DD):", "2024-12-31")
 risk_free_rate = st.number_input("Enter risk-free rate (e.g. 0.04 for 4%):", min_value=0.0, max_value=1.0, value=0.04, step=0.001, key='risk_free_rate')
@@ -163,7 +173,7 @@ with col2:
 # Perform calculations and display results
 if calculate_button:
     try:
-        SYMBOLS = [sym.strip().upper() for sym in symbols_input.split(",")]
+        SYMBOLS = [sym.upper() for sym in symbols_input]
         START_TIME = parse_date_to_timestamp_ms(start_date_str)
         END_TIME = parse_date_to_timestamp_ms(end_date_str)
 
