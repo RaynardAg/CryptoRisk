@@ -259,8 +259,7 @@ if calculate_button:
         cvar_value = var_calculator.historical_cvar(alpha)
 
         # Color bars below VaR threshold in red
-        fig_cvar.update_traces(marker_color=['red' if x <= var_threshold else 'blue' for x in portfolio_returns[0]],
-                              marker_opacity=0.7)
+        fig_cvar.update_traces(marker_color=['red' if x <= var_threshold else 'blue' for x in portfolio_returns.iloc[:, 0]], marker_opacity=0.7)
 
         fig_cvar.add_vline(
             x=cvar_value,
