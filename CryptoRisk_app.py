@@ -4,7 +4,9 @@ import pandas as pd
 from datetime import datetime
 import time
 import numpy as np
-import matplotlib.pyplot as plt
+import plotly.express as px
+import plotly.graph_objects as go
+from scipy.interpolate import interp1d
 
 # --- Crypto Data Fetcher Classes ---
 class CryptoDataFetcher:
@@ -135,7 +137,6 @@ class CryptoVaRCalculator:
         highest_sharpe_ratio = eff_frontier_dataframe.sort_values(by='Sharpe Ratio', ascending=False)
         return highest_sharpe_ratio
 
-
 def parse_date_to_timestamp_ms(date_str):
     dt = datetime.strptime(date_str, "%Y-%m-%d")
     return int(dt.timestamp() * 1000)
@@ -197,16 +198,20 @@ if calculate_button:
         st.subheader(f"Most Efficient Weights for Highest Sharpe Ratio ({best_portfolio['Sharpe Ratio']:.4f}):")
         st.write(", ".join(formatted_weights))
 
-        # Efficient Frontier Plot
-        fig, ax = plt.subplots()
-        scatter = ax.scatter(eff_frontier_df['Standard Deviation'], eff_frontier_df['Returns'], 
-                             c=eff_frontier_df['Sharpe Ratio'], cmap='viridis', marker='o')
-        ax.set_xlabel('Standard Deviation')
-        ax.set_ylabel('Returns')
-        ax.set_title('Efficient Frontier')
-        cbar = fig.colorbar(scatter, ax=ax)
-        cbar.set_label('Sharpe Ratio')
-        st.pyplot(fig)
+        # Efficient Frontier Plot using Plotly
+        fig = px.scatter(
+            eff_frontier_df,
+            x='Standard Deviation',
+            y='Returns',
+            color='Sharpe Ratio',
+            hover_data=['Sharpe Ratio'],
+            title='Efficient Frontier'
+        )
+        fig.update_layout(
+            xaxis_title='Standard Deviation',
+            yaxis_title='Returns'
+        )
+        st.plotly_chart(fig)
 
         # Calculate portfolio returns and VaR/CVaR
         portfolio_returns = portfolio_allocator.calculate_portfolio(best_weights)
@@ -216,44 +221,55 @@ if calculate_button:
         hVaR = -var_calculator.historical_var(alpha) * np.sqrt(time_horizon)
         historical_cvar = -var_calculator.historical_cvar(alpha) * np.sqrt(time_horizon)
 
-        # Display VaR value and histogram
+        # Display VaR value
         st.subheader(f"Historical VaR ({alpha}%)")
         st.write(f"{hVaR:.4f}")
 
-        fig_var, ax_var = plt.subplots()
-        ax_var.hist(portfolio_returns, bins=50, alpha=0.7, color='blue', edgecolor='black')
+        # VaR Histogram using Plotly
+        fig_var = px.histogram(
+            portfolio_returns,
+            x=0,
+            nbins=50,
+            title='Portfolio Returns Histogram with VaR',
+            labels={'0': 'Returns'}
+        )
         var_threshold = np.percentile(portfolio_returns, alpha)
-        ax_var.axvline(x=var_threshold, color='red', linestyle='--', linewidth=2, label=f'VaR ({alpha}%) = {var_threshold:.4f}')
-        ax_var.set_title('Portfolio Returns Histogram with VaR')
-        ax_var.set_xlabel('Returns')
-        ax_var.set_ylabel('Frequency')
-        ax_var.legend()
-        st.pyplot(fig_var)
+        fig_var.add_vline(
+            x=var_threshold,
+            line_color='red',
+            line_dash='dash',
+            annotation_text=f'VaR ({alpha}%) = {var_threshold:.4f}',
+            annotation_position="top right"
+        )
+        st.plotly_chart(fig_var)
 
-        # Display CVaR value and histogram
+        # Display CVaR value
         st.subheader(f"Historical CVaR ({alpha}%)")
         st.write(f"{historical_cvar:.4f}")
 
-        fig_cvar, ax_cvar = plt.subplots()
-        counts, bins, patches = ax_cvar.hist(portfolio_returns, bins=50, alpha=0.7, color='blue', edgecolor='black')
-
+        # CVaR Histogram using Plotly
+        fig_cvar = px.histogram(
+            portfolio_returns,
+            x=0,
+            nbins=50,
+            title='Portfolio Returns Histogram with CVaR',
+            labels={'0': 'Returns'}
+        )
         var_threshold = np.percentile(portfolio_returns, alpha)
         cvar_value = var_calculator.historical_cvar(alpha)
 
-        # Highlight bars below VaR threshold in red
-        for patch, bin_left in zip(patches, bins):
-            if bin_left <= var_threshold:
-                patch.set_facecolor('red')
-                patch.set_alpha(0.4)
+        # Color bars below VaR threshold in red
+        fig_cvar.update_traces(marker_color=['red' if x <= var_threshold else 'blue' for x in portfolio_returns[0]],
+                              marker_opacity=0.7)
 
-        # Draw vertical line for CVaR value
-        ax_cvar.axvline(x=cvar_value, color='darkred', linestyle='-', linewidth=2, label=f'CVaR ({alpha}%) = {cvar_value:.4f}')
-
-        ax_cvar.set_title('Portfolio Returns Histogram with CVaR')
-        ax_cvar.set_xlabel('Returns')
-        ax_cvar.set_ylabel('Frequency')
-        ax_cvar.legend()
-        st.pyplot(fig_cvar)
+        fig_cvar.add_vline(
+            x=cvar_value,
+            line_color='darkred',
+            line_dash='dash',
+            annotation_text=f'CVaR ({alpha}%) = {cvar_value:.4f}',
+            annotation_position="top right"
+        )
+        st.plotly_chart(fig_cvar)
 
         st.session_state.calculated = True
 
@@ -272,6 +288,7 @@ if st.session_state.calculated:
         if st.button("Reset"):
             st.session_state.calculated = False
             st.rerun()
+
 
 
 
