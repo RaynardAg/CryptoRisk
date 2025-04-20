@@ -163,7 +163,7 @@ start_date_str = st.text_input("Enter start date (YYYY-MM-DD):", "2024-01-01")
 end_date_str = st.text_input("Enter end date (YYYY-MM-DD):", "2024-12-31")
 risk_free_rate = st.number_input("Enter risk-free rate (e.g. 0.04 for 4%):", min_value=0.0, max_value=1.0, value=0.04, step=0.001, key='risk_free_rate')
 alpha = st.number_input("Enter VaR confidence level in percent (e.g. 5 for 5%):", min_value=0.1, max_value=100.0, value=5.0, step=0.1, key='alpha')
-num_bins = st.number_input("Enter the number of bins for the histograms:", min_value=10, max_value=100, value=50, step=5, key='num_bins')
+num_bins = st.number_input("Enter the number of bins for the histograms:", min_value=10, max_value=100, value=20, step=5, key='num_bins')
 
 # Centered button layout
 col1, col2, _ = st.columns([1.5, 1, 1])  # Adjust column widths as needed
@@ -222,7 +222,7 @@ if calculate_button:
         historical_cvar = -var_calculator.historical_cvar(alpha) * np.sqrt(time_horizon)
 
         # Display VaR value
-        st.subheader(f"Historical VaR ({alpha}%) - {hVaR:.4f}")
+        st.subheader(f"1 Day Historical VaR ({alpha}%) - {hVaR:.4f}")
 
         # Compute histogram data for VaR and CVaR
         counts, bin_edges = np.histogram(portfolio_returns, bins=num_bins)
@@ -254,7 +254,7 @@ if calculate_button:
         st.plotly_chart(fig_var)
 
         # Display CVaR value
-        st.subheader(f"Historical CVaR ({alpha}%) - {historical_cvar:.4f}")
+        st.subheader(f"1 Day Historical CVaR ({alpha}%) - {historical_cvar:.4f}")
 
         # Create CVaR Histogram
         fig_cvar = go.Figure(data=[go.Bar(
