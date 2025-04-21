@@ -152,7 +152,7 @@ if 'calculated' not in st.session_state:
     st.session_state.calculated = False
 
 # Streamlit app
-st.title("Crypto Portfolio Efficient Frontier and VaR Dashboard")
+st.title("Crypto Portfolio Dashboard")
 
 # Input widgets
 available_tickers = ["BTCUSDT", "ETHUSDT", "SOLUSDT", "XRPUSDT", "BNBUSDT", "DOGEUSDT", "ADAUSDT", "XLMUSDT", "AVAXUSDT"]
