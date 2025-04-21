@@ -25,7 +25,7 @@ class CryptoDataFetcher:
 
         for attempt in range(retries):
             try:
-                response = requests.get(url, headers=self.headers)  # Include headers
+                response = requests.get(url, headers=self.headers)
                 response.raise_for_status()  # Raise HTTPError for bad responses (4xx or 5xx)
                 return response.json()
             except requests.exceptions.RequestException as e:
@@ -117,18 +117,25 @@ class CryptoVaRCalculator:
         else:
             raise TypeError("Expected returns to be dataframe or series")
 
-    def eff_frontier(self, num_portfolios=10000, risk_free_rate=0.04):
+    def eff_frontier(self, num_portfolios=10000, risk_free_rate=0.04, include_cash=False):
         r = self.ind_returns
-        weights = np.random.dirichlet(np.ones(len(r.columns)), size=num_portfolios)
-        assert np.allclose(np.sum(weights, axis=1), 1)
+        num_assets = len(r.columns)
+
+        if include_cash:
+            weights = np.random.dirichlet(np.ones(num_assets + 1), size=num_portfolios)  # +1 for cash
+            extended_returns = np.append(r.mean(), risk_free_rate)
+            extended_cov = np.zeros((num_assets + 1, num_assets + 1))
+            extended_cov[:num_assets, :num_assets] = r.cov()
+        else:
+            weights = np.random.dirichlet(np.ones(num_assets), size=num_portfolios)
+            extended_returns = r.mean()
+            extended_cov = r.cov()
 
         eff_front_dict = {}
-        cov_matrix_ret = r.cov()
-        expected_returns = r.mean()
 
         for w in weights:
-            port_ret = expected_returns @ w.T
-            port_std = np.sqrt(w.T @ cov_matrix_ret @ w)
+            port_ret = np.dot(w, extended_returns)
+            port_std = np.sqrt(np.dot(w.T, np.dot(extended_cov, w)))
             sharpe_ratio = (port_ret - risk_free_rate) / port_std if port_std != 0 else 0
             eff_front_dict[str(list(map(float, w)))] = [port_ret, port_std, sharpe_ratio]
 
@@ -154,6 +161,13 @@ symbols_input = st.multiselect(
     options=available_tickers,
     default=["BTCUSDT", "ETHUSDT", "SOLUSDT"]
 )
+
+include_cash = st.radio(
+    "Include cash (risk-free asset) in portfolio optimization?",
+    options=["No", "Yes"],
+    index=0
+)
+
 if not symbols_input:
     st.warning("Please select at least one ticker.")
 else:
@@ -163,7 +177,6 @@ start_date_str = st.text_input("Enter start date (YYYY-MM-DD):", "2024-01-01")
 end_date_str = st.text_input("Enter end date (YYYY-MM-DD):", "2024-12-31")
 risk_free_rate = st.number_input("Enter risk-free rate (e.g. 0.04 for 4%):", min_value=0.0, max_value=1.0, value=0.04, step=0.001, key='risk_free_rate')
 alpha = st.number_input("Enter VaR confidence level in percent (e.g. 5 for 5%):", min_value=0.1, max_value=100.0, value=5.0, step=0.1, key='alpha')
-num_bins = st.number_input("Enter the number of bins for the histograms:", min_value=10, max_value=100, value=20, step=5, key='num_bins')
 
 # Centered button layout
 col1, col2, _ = st.columns([1.5, 1, 1])  # Adjust column widths as needed
@@ -183,7 +196,7 @@ if calculate_button:
         individual_returns = portfolio_allocator.calculate_individual_returns()
 
         var_calculator = CryptoVaRCalculator(None, individual_returns)
-        eff_frontier_df = var_calculator.eff_frontier(num_portfolios=10000, risk_free_rate=risk_free_rate)
+        eff_frontier_df = var_calculator.eff_frontier(num_portfolios=10000, risk_free_rate=risk_free_rate, include_cash=(include_cash == "Yes"))
 
         # Extract best portfolio info first
         best_portfolio = eff_frontier_df.iloc[0]
@@ -193,6 +206,8 @@ if calculate_button:
         # Show best weights
         best_weights_percent = [round(w * 100, 4) for w in best_weights]
         asset_columns = individual_returns.columns.tolist()
+        if include_cash == "Yes":
+            asset_columns = asset_columns + ['Cash']
         formatted_weights = [f"{asset}: {weight}%" for asset, weight in zip(asset_columns, best_weights_percent)]
 
         st.subheader(f"Most Efficient Weights for Highest Sharpe Ratio ({best_portfolio['Sharpe Ratio']:.4f}):")
@@ -214,7 +229,23 @@ if calculate_button:
         st.plotly_chart(fig)
 
         # Calculate portfolio returns and VaR/CVaR
-        portfolio_returns = portfolio_allocator.calculate_portfolio(best_weights)
+        # Handle portfolio returns calculation differently when cash is included
+        if include_cash == "Yes":
+            weights_risky = np.array(best_weights[:-1])
+            weight_cash = best_weights[-1]
+
+            sum_weights_risky = np.sum(weights_risky)
+            if sum_weights_risky > 0:
+                normalized_weights_risky = weights_risky / sum_weights_risky
+                portfolio_returns_risky = portfolio_allocator.calculate_portfolio(normalized_weights_risky)
+            else:
+                portfolio_returns_risky = pd.Series(0, index=portfolio_allocator.returns.index)
+
+            portfolio_returns = portfolio_returns_risky * sum_weights_risky + weight_cash * risk_free_rate
+        else:
+            portfolio_returns = portfolio_allocator.calculate_portfolio(best_weights)
+
+
         var_calculator.returns = portfolio_returns
 
         time_horizon = 1
@@ -225,6 +256,7 @@ if calculate_button:
         st.subheader(f"1 Day Historical VaR ({alpha}%) - {hVaR:.4f}")
 
         # Compute histogram data for VaR and CVaR
+        num_bins = 21
         counts, bin_edges = np.histogram(portfolio_returns, bins=num_bins)
         bin_centers = 0.5 * (bin_edges[:-1] + bin_edges[1:])
         var_threshold = np.percentile(portfolio_returns, alpha)
