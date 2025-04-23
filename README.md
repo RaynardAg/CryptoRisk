@@ -71,10 +71,9 @@ The Streamlit interface allows users to interact with the application.
 *   numpy
 *   plotly.express
 *   plotly.graph_objects
-*   scipy.interpolate
 
 You can install these dependencies using pip:
-pip install streamlit requests pandas numpy plotly scipy
+pip install streamlit requests pandas numpy plotly
 
 
 ## Disclaimer

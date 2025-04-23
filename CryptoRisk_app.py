@@ -6,7 +6,6 @@ import time
 import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
-from scipy.interpolate import interp1d
 
 # --- Crypto Data Fetcher Classes ---
 class CryptoDataFetcher:
