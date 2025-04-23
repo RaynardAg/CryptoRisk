@@ -1,17 +1,13 @@
 # Crypto Portfolio Dashboard
 
-This Streamlit application calculates and displays the efficient frontier of a crypto portfolio, along with Value at Risk (VaR) and Conditional Value at Risk (CVaR) metrics. It allows users to select cryptocurrencies, specify a time period, and set parameters like risk-free rate and VaR confidence level.
+This streamlit application provides a quick snapshot of the performance and risk of a collection of crypto assets. The efficient frontier outlines the best weighting based on the excess returns and volatilities, the VaR and CVaR charts provide quick risk management snapshots, and the Portfolio Over Time charts shows the cumulative returns of the portfolio over the chosen time range.
 
 ## Features
 
--   **Cryptocurrency Selection:** Choose from a list of cryptocurrencies to include in the portfolio.
--   **Date Range Input:** Specify the start and end dates for the analysis.
--   **Risk-Free Rate:** Set the risk-free rate for efficient frontier calculation.
--   **VaR Confidence Level:** Adjust the confidence level for VaR and CVaR calculations.
--   **Efficient Frontier Visualization:** Interactive plot displaying the efficient frontier.
--   **Portfolio Optimization:** Determines the portfolio with the highest Sharpe ratio.
--   **VaR and CVaR Calculation:** Computes and displays VaR and CVaR for the optimized portfolio.
--   **Interactive Charts:** Displays portfolio returns and risk metrics using Plotly.
+-   **Efficient Frontier:** Outputs the most efficient weights for each chosen asset based on the excess returns and volatility of each asset. This is done by generating a set of random weights, in which the one with the highest Sharpe Ratio is chosen.
+-   **1 Day Historical Value-at-Risk (VaR):** The 1 day historical VaR represents the loss threshold for a given confidence level, where holding the most efficient portfolio for one day will not exceed this amount. This is calculated by using the percentile of the historical returns corresponding to the confidence level.
+-   **1 Day Historical Conditional Value-at-Risk (VaR):** The 1 day historical CVaR (also known as Expected Shortfall) represents the average amount that would be lost given that the loss exceeds the VaR threshold at the specified confidence level. It is often used as the more conservative risk metric compared to VaR.
+-   **Portfolio Value Over Time:** Shows the cumulative returns of the most efficient portfolio based on the efficient frontier.
 
 ## How to Use
 
