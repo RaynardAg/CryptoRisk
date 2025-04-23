@@ -6,7 +6,7 @@ This streamlit application provides a quick snapshot of the performance and risk
 
 -   **Efficient Frontier:** Outputs the most efficient weights for each chosen asset based on the excess returns and volatility of each asset. This is done by generating a set of random weights, in which the one with the highest Sharpe Ratio is chosen.
 -   **1 Day Historical Value-at-Risk (VaR):** The 1 day historical VaR represents the loss threshold for a given confidence level, where holding the most efficient portfolio for one day will not exceed this amount. This is calculated by using the percentile of the historical returns corresponding to the confidence level.
--   **1 Day Historical Conditional Value-at-Risk (VaR):** The 1 day historical CVaR (also known as Expected Shortfall) represents the average amount that would be lost given that the loss exceeds the VaR threshold at the specified confidence level. It is often used as the more conservative risk metric compared to VaR.
+-   **1 Day Historical Conditional Value-at-Risk (CVaR):** The 1 day historical CVaR (also known as Expected Shortfall) represents the average amount that would be lost given that the loss exceeds the VaR threshold at the specified confidence level. It is often used as the more conservative risk metric compared to VaR.
 -   **Portfolio Value Over Time:** Shows the cumulative returns of the most efficient portfolio based on the efficient frontier.
 
 ## How to Use
